@@ -2,6 +2,7 @@ package db
 
 import (
 	"log"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -11,7 +12,12 @@ var DB *sqlx.DB
 
 func ConnectDB() {
 	var err error
-	connStr := "user=youruser dbname=yourdb password=yourpassword host=localhost port=5432 sslmode=disable"
+	connStr := "user=" + os.Getenv("DB_USER") +
+		" dbname=" + os.Getenv("DB_NAME") +
+		" password=" + os.Getenv("DB_PASSWORD") +
+		" host=" + os.Getenv("DB_HOST") +
+		" port=" + os.Getenv("DB_PORT") +
+		" sslmode=disable"
 
 	DB, err = sqlx.Open("postgres", connStr)
 	if err != nil {

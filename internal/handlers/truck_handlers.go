@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"truck-logistics-api/db"
 	"truck-logistics-api/internal/models"
 	"truck-logistics-api/internal/services"
 
 	"github.com/gorilla/mux"
 )
 
-// GetAllTrucks fetches all trucks from the database
 func GetAllTrucks(w http.ResponseWriter, r *http.Request) {
 	trucks, err := services.GetAllTrucks()
 	if err != nil {
@@ -23,7 +23,6 @@ func GetAllTrucks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(trucks)
 }
 
-// GetTruckByID fetches a truck by its ID
 func GetTruckByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	truckID, err := strconv.Atoi(vars["id"])
@@ -42,7 +41,6 @@ func GetTruckByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(truck)
 }
 
-// CreateTruck adds a new truck to the database
 func CreateTruck(w http.ResponseWriter, r *http.Request) {
 	var truck models.Truck
 	if err := json.NewDecoder(r.Body).Decode(&truck); err != nil {
@@ -50,18 +48,51 @@ func CreateTruck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newID, err := services.CreateTruck(&truck)
+	scheduleJSON, err := json.Marshal(truck.Schedule)
 	if err != nil {
+		http.Error(w, "Failed to process schedule", http.StatusInternalServerError)
+		return
+	}
+
+	query := `
+		INSERT INTO trucks (load_capacity, ac_status, last_maintenance, expected_maintenance, ac_maintenance, temperature, latitude, longitude, schedule)
+		VALUES (:load_capacity, :ac_status, :last_maintenance, :expected_maintenance, :ac_maintenance, :temperature, :latitude, :longitude, :schedule)
+		RETURNING id;
+	`
+
+	tx := db.DB.MustBegin()
+	stmt, err := tx.PrepareNamed(query)
+	if err != nil {
+		http.Error(w, "Failed to prepare query", http.StatusInternalServerError)
+		return
+	}
+
+	truckData := map[string]interface{}{
+		"load_capacity":        truck.LoadCapacity,
+		"ac_status":            truck.ACStatus,
+		"last_maintenance":     truck.LastMaintenance,
+		"expected_maintenance": truck.ExpectedMaintenance,
+		"ac_maintenance":       truck.ACMaintenance,
+		"temperature":          truck.Temperature,
+		"latitude":             truck.Latitude,
+		"longitude":            truck.Longitude,
+		"schedule":             string(scheduleJSON),
+	}
+
+	var newID int
+	err = stmt.Get(&newID, truckData)
+	if err != nil {
+		tx.Rollback()
 		http.Error(w, "Failed to insert truck", http.StatusInternalServerError)
 		return
 	}
+	tx.Commit()
 
 	truck.ID = newID
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(truck)
 }
 
-// UpdateTruck modifies an existing truck
 func UpdateTruck(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	truckID, err := strconv.Atoi(vars["id"])
@@ -86,7 +117,6 @@ func UpdateTruck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Truck updated successfully"})
 }
 
-// DeleteTruck removes a truck from the database
 func DeleteTruck(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	truckID, err := strconv.Atoi(vars["id"])

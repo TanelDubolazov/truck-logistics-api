@@ -2,25 +2,23 @@ package config
 
 import (
 	"log"
-	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
 
-// LoadEnv loads environment variables from a .env file
+// LoadEnv loads environment variables from the project's root directory
 func LoadEnv() {
-	err := godotenv.Load()
+	rootPath, err := filepath.Abs("./") // Adjust path as needed
+	if err != nil {
+		log.Fatalf("Error getting root path: %v", err)
+	}
+
+	envPath := filepath.Join(rootPath, ".env")
+
+	err = godotenv.Load(envPath)
 	if err != nil {
 		log.Println("No .env file found, using system environment variables.")
 	}
 	log.Println("✅ Environment variables loaded.")
-}
-
-// GetEnv fetches environment variables with a fallback default value
-func GetEnv(key, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return fallback
-	}
-	return value
 }
