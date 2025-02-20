@@ -1,0 +1,6 @@
+# Database configuration
+DB_USER=youruser
+DB_PASSWORD=yourpassword
+DB_NAME=yourdb
+DB_HOST=localhost
+DB_PORT=5432
