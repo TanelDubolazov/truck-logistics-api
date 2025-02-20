@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/TanelDubolazov/truck-logistics-api/db"
+	"truck-logistics-api/db"
 
-	"github.com/TanelDubolazov/truck-logistics-api/routes"
+	"truck-logistics-api/routes"
 
-	"github.com/TanelDubolazov/truck-logistics-api/config"
+	"truck-logistics-api/config"
 )
 
 func main() {

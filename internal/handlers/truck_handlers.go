@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"trucklogistics/db"
-	"trucklogistics/models"
+	"truck-logistics-api/db"
+	"truck-logistics-api/internal/models"
 
 	"github.com/gorilla/mux"
 )
@@ -44,15 +44,16 @@ func CreateTruck(w http.ResponseWriter, r *http.Request) {
 		VALUES (:load_capacity, :ac_status, :last_maintenance, :expected_maintenance, :ac_maintenance, :temperature, :latitude, :longitude, :schedule)
 		RETURNING id;
 	`
+
 	tx := db.DB.MustBegin()
-	stmt, err := tx.NamedStmt(db.DB.Rebind(query))
+	stmt, err := tx.PrepareNamed(query)
 	if err != nil {
 		http.Error(w, "Failed to prepare query", http.StatusInternalServerError)
 		return
 	}
 
 	var newID int
-	err = stmt.QueryRow(truck).Scan(&newID)
+	err = stmt.Get(&newID, truck)
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, "Failed to insert truck", http.StatusInternalServerError)

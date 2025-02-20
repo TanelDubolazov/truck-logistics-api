@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/TanelDubolazov/truck-logistics-api/handlers"
+	"truck-logistics-api/internal/handlers"
 
 	"github.com/gorilla/mux"
 )
