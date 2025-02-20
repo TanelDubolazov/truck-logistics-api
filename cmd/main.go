@@ -4,9 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"trucklogistics/config"
-	"trucklogistics/db"
-	"trucklogistics/routes"
+	"github.com/TanelDubolazov/truck-logistics-api/db"
+
+	"github.com/TanelDubolazov/truck-logistics-api/routes"
+
+	"github.com/TanelDubolazov/truck-logistics-api/config"
 )
 
 func main() {
@@ -19,6 +21,6 @@ func main() {
 	// Initialize routes
 	r := routes.SetupRouter()
 
-	log.Println("🚀 Server running on port 8080")
+	log.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", r)
 }
